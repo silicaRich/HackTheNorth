@@ -4,38 +4,39 @@ using System.Threading;
 using System; 
 
 public class loadGoogleImage : MonoBehaviour {
-
 	private int imgWidth = 1080;
 	private int imgHeight = 960;
 
 	// Use this for initialization
 	void Start () {
-		//Download textures from Google Maps API
+		//Download all of the appropriate textures
 		Texture2D[] textures = getTexturesFromURL("http://maps.googleapis.com/maps/api/streetview", 
-		                                          48.8577569, 2.2953444, imgWidth, imgHeight); //lat, long, width, height
-		RefreshTextures(textures);
-	}
+		                                          48.8577569,2.2953444, imgWidth, imgHeight); //lat, long, width, height
 
-	void RefreshTextures(Texture2D[] textures) { 
+	//debug length
+	Debug.Log ("texture length:" + textures.Length);
+	
+	//Grab both of the cameras for each lens on the Oculus
+	GameObject[] cams = {GameObject.FindWithTag("LeftCam"), GameObject.FindWithTag("RightCam")};
+	
+	//Map each texture to the correct location on the SkyBox
+	foreach (GameObject cam in cams) {
+						Skybox skyBox = cam.GetComponent<Skybox> ();
+		
+						Material material = skyBox.material;
+						// Box is inverted along y axis (Rotating counter-clockwise)
+						material.SetTexture ("_LeftTex", textures [0]);
+						material.SetTexture ("_BackTex", textures [1]);
+						material.SetTexture ("_RightTex", textures [2]);
+						material.SetTexture ("_FrontTex", textures [3]);
+						material.SetTexture ("_UpTex", textures [4]);
+						material.SetTexture ("_DownTex", textures [5]);//debug length
+						Debug.Log ("texture length:" + textures.Length);
+				}
 
-
-
-		//Grab both of the cameras for each lens on the Oculus
-		GameObject[] cams = {GameObject.FindWithTag("LeftCam"), GameObject.FindWithTag("RightCam")};
-
-		//Map each texture to the correct location on the SkyBox
-		foreach (GameObject cam in cams) {
-			Skybox skyBox = cam.GetComponent<Skybox>();
-			Material material = skyBox.material;
-			// Box is inverted along y axis (Rotating counter-clockwise)
-			material.SetTexture ("_LeftTex", textures[0]);
-			material.SetTexture ("_BackTex", textures[1]);
-			material.SetTexture ("_RightTex", textures[2]);
-			material.SetTexture ("_FrontTex", textures[3]);
-			material.SetTexture ("_UpTex", textures[4]);
-			material.SetTexture ("_DownTex", textures[5]);//debug length
+			
 		}
-	}
+
 
 	// URL is the "base" URL of the current point in Street View
 	// @Param
@@ -60,11 +61,18 @@ public class loadGoogleImage : MonoBehaviour {
 				imageURL = url + "&pitch=270&heading=270";
 			
 			WWW www = new WWW(imageURL);
+			//TODO: Can we make this call asynchronous? Currently it blocks until the image is downloaded.
 			while (!www.isDone) {
 				
-			}
+			}	
 			textures[i] = www.texture;
+			/*Thread t = new Thread(new ThreadStart(this, () => {
+			})).Start();
+			 */
 		}
+
+		//TODO: Download the remaining two images
+
 		return textures;
 	}
 
@@ -77,12 +85,14 @@ public class loadGoogleImage : MonoBehaviour {
 		//	done = true;
 		//}
 
-		//if (Input.GetKey("up")){
-		//	Texture2D[] currentTextures = getTexturesFromURL();
-		//	getTexturesFromURL(string _url, double lat, double lng, int imageHeight, int imageWidth);
-		//}
-		//if (Input.GetKey("down")){
-		//			getTexturesFromURL(string _url, double lat, double lng, int imageHeight, int imageWidth);
-		//}
+		if (Input.GetKey("up")){
+			Texture2D[] currentTextures = getTexturesFromURL();
+			getTexturesFromURL(string _url, double lat, double lng, int imageHeight, int imageWidth);
+		}
+		if (Input.GetKey("down")){
+					getTexturesFromURL(string _url, double lat, double lng, int imageHeight, int imageWidth);
+		}
+
+
 	}
 }
